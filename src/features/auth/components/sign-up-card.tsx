@@ -1,3 +1,5 @@
+"use client";
+
 import { DottedSeparator } from "@/components/dotted-separater"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +16,7 @@ import { useRegister } from "../api/use-register"
 
 export const SignUpCard = () => {
 
-    const { mutate } = useRegister()
+    const { mutate, isPending } = useRegister()
 
     const form = useForm({
         resolver: zodResolver(registerSchema),
@@ -104,7 +106,7 @@ export const SignUpCard = () => {
                             )}
                         />
 
-                        <Button disabled={false} size="lg" className="w-full">Sign Up</Button>
+                        <Button disabled={isPending} size="lg" className="w-full">Sign Up</Button>
                     </form>
                 </Form>
             </CardContent>
@@ -112,8 +114,8 @@ export const SignUpCard = () => {
                 <DottedSeparator />
             </div>
             <CardContent className="p-7 flex flex-col gap-y-4">
-                <Button disabled={false} variant="secondary" size="lg" className="w-full"><FcGoogle className="mr-2 size-5" /> Login with Google</Button>
-                <Button disabled={false} variant="secondary" size="lg" className="w-full"><FaGithub className="mr-2 size-5" /> Login with Github</Button>
+                <Button disabled={isPending} variant="secondary" size="lg" className="w-full"><FcGoogle className="mr-2 size-5" /> Login with Google</Button>
+                <Button disabled={isPending} variant="secondary" size="lg" className="w-full"><FaGithub className="mr-2 size-5" /> Login with Github</Button>
             </CardContent>
             <div className="px-7">
                 <DottedSeparator />
