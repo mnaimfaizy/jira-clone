@@ -1,8 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { Account, Client, Databases, Query } from "node-appwrite";
-import { AUTH_COOKIE } from "../auth/constants";
+import { Query } from "node-appwrite";
 import { DATABASE_ID, MEMBERS_ID, WORKSPACES_ID } from "@/config";
 import { getMember } from "../members/utils";
 import { Workspace } from "./types";
@@ -59,13 +57,32 @@ export const getWorkspace = async ( {workspaceId}: {workspaceId: string}) => {
 
         if(!member) return null;
 
-        const workspaces = await databases.getDocument<Workspace>(
+        const workspace = await databases.getDocument<Workspace>(
             DATABASE_ID,
             WORKSPACES_ID,
             workspaceId
         );
 
-        return workspaces;
+        return workspace;
+
+    } catch {
+        return null;
+    }
+    
+}
+
+export const getWorkspaceInfo = async ( {workspaceId}: {workspaceId: string}) => {
+    try {
+
+        const { databases } = await createSessionClient();
+
+        const workspace = await databases.getDocument<Workspace>(
+            DATABASE_ID,
+            WORKSPACES_ID,
+            workspaceId
+        );
+
+        return { name: workspace.name };
 
     } catch {
         return null;
