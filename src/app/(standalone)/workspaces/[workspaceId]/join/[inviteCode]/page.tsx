@@ -3,25 +3,28 @@ import { JoinWorkspaceForm } from "@/features/workspaces/components/join-workspa
 import { getWorkspaceInfo } from "@/features/workspaces/queries";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 interface WorkspaceIdJoinPageProps {
-    params: {
-        workspaceId: string;
-    }
+  params: Promise<{
+    workspaceId: string;
+  }>;
 }
 
 const WorkspaceIdJoinPage = async ({ params }: WorkspaceIdJoinPageProps) => {
-    const user = await getCurrent();
-    if(!user) redirect("/sign-in");
+  const user = await getCurrent();
+  if (!user) redirect("/sign-in");
 
-    const initialValues = await getWorkspaceInfo({ workspaceId: params.workspaceId });
+  const { workspaceId } = await params;
+  const initialValues = await getWorkspaceInfo({ workspaceId });
 
-    if(!initialValues) redirect("/");
+  if (!initialValues) redirect("/");
 
-    return (
-        <div className="w-full lg:max-w-xl">
-        <JoinWorkspaceForm initialValues={initialValues} />
-        </div>
-    );
-}
+  return (
+    <div className="w-full lg:max-w-xl">
+      <JoinWorkspaceForm initialValues={initialValues} />
+    </div>
+  );
+};
 
 export default WorkspaceIdJoinPage;

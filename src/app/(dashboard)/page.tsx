@@ -2,6 +2,8 @@ import { getCurrent } from "@/features/auth/queries";
 import { getWorkspaces } from "@/features/workspaces/queries";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const user = await getCurrent();
 
@@ -14,5 +16,4 @@ export default async function Home() {
   } else {
     redirect(`/workspaces/${workspaces.documents[0].$id}`);
   }
-
 }
