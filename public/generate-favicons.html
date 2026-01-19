@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate Favicons - Jira Clone</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #3b82f6;
+        margin-bottom: 10px;
+      }
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+      }
+      canvas {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        margin: 10px 0;
+        display: block;
+      }
+      button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px 10px 10px 0;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      .preview {
+        margin: 20px 0;
+      }
+      .info {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .generated {
+        color: #059669;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎨 Favicon Generator - Jira Clone</h1>
+      <p class="subtitle">
+        Generate all required favicon and app icon files for the project
+      </p>
+
+      <div class="info">
+        <strong>Instructions:</strong>
+        <ol>
+          <li>Click the buttons below to generate each icon size</li>
+          <li>Right-click each generated image and "Save As"</li>
+          <li>
+            Save them to the <code>public/</code> folder with the exact names
+            shown
+          </li>
+          <li>The OG image (1200x630) is for social media sharing</li>
+        </ol>
+      </div>
+
+      <div class="preview">
+        <h3>Icon Preview:</h3>
+        <canvas id="preview" width="256" height="256"></canvas>
+      </div>
+
+      <button onclick="generateFavicon()">Generate favicon.ico (32x32)</button>
+      <button onclick="generateIcon(192)">Generate icon-192.png</button>
+      <button onclick="generateIcon(512)">Generate icon-512.png</button>
+      <button onclick="generateAppleIcon()">
+        Generate apple-icon.png (180x180)
+      </button>
+      <button onclick="generateOGImage()">
+        Generate og-image.png (1200x630)
+      </button>
+
+      <div id="output"></div>
+    </div>
+
+    <script>
+      // Draw the Jira Clone logo
+      function drawLogo(ctx, size) {
+        // Background
+        ctx.fillStyle = "#3b82f6";
+        ctx.fillRect(0, 0, size, size);
+
+        // Main diamond
+        const center = size / 2;
+        const diamondSize = size * 0.4;
+
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.moveTo(center, center - diamondSize);
+        ctx.lineTo(center + diamondSize, center);
+        ctx.lineTo(center, center + diamondSize);
+        ctx.lineTo(center - diamondSize, center);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner diamond (darker)
+        const innerSize = diamondSize * 0.6;
+        ctx.fillStyle = "#1e40af";
+        ctx.beginPath();
+        ctx.moveTo(center, center - innerSize);
+        ctx.lineTo(center + innerSize, center);
+        ctx.lineTo(center, center + innerSize);
+        ctx.lineTo(center - innerSize, center);
+        ctx.closePath();
+        ctx.fill();
+
+        // Center circle
+        const circleRadius = size * 0.08;
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(center, center, circleRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Preview
+      function drawPreview() {
+        const canvas = document.getElementById("preview");
+        const ctx = canvas.getContext("2d");
+        drawLogo(ctx, 256);
+      }
+
+      function generateFavicon() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext("2d");
+        drawLogo(ctx, 32);
+
+        downloadCanvas(canvas, "favicon.ico");
+      }
+
+      function generateIcon(size) {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        drawLogo(ctx, size);
+
+        downloadCanvas(canvas, `icon-${size}.png`);
+      }
+
+      function generateAppleIcon() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 180;
+        canvas.height = 180;
+        const ctx = canvas.getContext("2d");
+        drawLogo(ctx, 180);
+
+        downloadCanvas(canvas, "apple-icon.png");
+      }
+
+      function generateOGImage() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1200;
+        canvas.height = 630;
+        const ctx = canvas.getContext("2d");
+
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+        gradient.addColorStop(0, "#1e40af");
+        gradient.addColorStop(1, "#3b82f6");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1200, 630);
+
+        // Logo (larger, centered left)
+        const logoSize = 300;
+        const logoX = 150;
+        const logoY = (630 - logoSize) / 2;
+
+        // Draw logo background
+        ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+        ctx.fillRect(logoX - 20, logoY - 20, logoSize + 40, logoSize + 40);
+
+        // Draw simplified logo
+        const center = logoX + logoSize / 2;
+        const centerY = logoY + logoSize / 2;
+        const diamondSize = logoSize * 0.4;
+
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.moveTo(center, centerY - diamondSize);
+        ctx.lineTo(center + diamondSize, centerY);
+        ctx.lineTo(center, centerY + diamondSize);
+        ctx.lineTo(center - diamondSize, centerY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Text
+        ctx.fillStyle = "white";
+        ctx.font = "bold 72px system-ui, -apple-system, sans-serif";
+        ctx.fillText("Jira Clone", 500, 260);
+
+        ctx.font = "36px system-ui, -apple-system, sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.fillText("Project Management & Team Collaboration", 500, 330);
+
+        ctx.font = "28px system-ui, -apple-system, sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.fillText(
+          "Manage projects, track tasks, boost productivity",
+          500,
+          390,
+        );
+
+        downloadCanvas(canvas, "og-image.png");
+      }
+
+      function downloadCanvas(canvas, filename) {
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          showSuccess(filename);
+        });
+      }
+
+      function showSuccess(filename) {
+        const output = document.getElementById("output");
+        const msg = document.createElement("div");
+        msg.className = "generated";
+        msg.textContent = `✓ Generated ${filename}`;
+        output.appendChild(msg);
+      }
+
+      // Draw preview on load
+      drawPreview();
+    </script>
+  </body>
+</html>

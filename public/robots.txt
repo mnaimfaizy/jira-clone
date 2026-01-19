@@ -1,0 +1,17 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow authentication pages from indexing
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /resend-verification
+
+# Disallow API routes
+Disallow: /api/
+
+# Sitemap location
+Sitemap: http://localhost:3001/sitemap.xml
