@@ -7,13 +7,29 @@ A modern, full-featured project management and task tracking application built w
 ### Core Features
 
 - **🔐 Authentication System**: Secure user registration and login with session management
+  - Email/password authentication with email verification
+  - Email verification (optional - requires Appwrite Pro or self-hosting for SMTP)
+  - Resend verification email functionality
+  - Password reset functionality (requires SMTP configuration)
+  - Forgot password flow with secure token-based recovery
 - **👥 Workspace Management**: Create, update, and manage multiple workspaces
 - **🎫 Invite System**: Generate and share workspace invite codes
 - **👤 Member Management**: Add, remove, and manage workspace members with role-based access (Admin/Member)
-- **🖼️ Image Upload**: Support for workspace avatars and image management
+- **🖼️ Image Upload**: Support for workspace avatars and image management (optimized for free tier)
 - **📱 Responsive Design**: Mobile-first design with responsive navigation and sidebar
 - **🎨 Modern UI**: Built with Radix UI components and Tailwind CSS
 - **🌙 Theme Support**: Dark mode ready with next-themes
+
+### Appwrite Free Tier Compatibility
+
+This application is fully functional on **Appwrite Cloud's free tier**:
+
+- ✅ **Authentication**: Full user registration and login
+- ✅ **Workspaces**: Create and manage unlimited workspaces
+- ✅ **File Uploads**: Workspace avatars and images (using direct file URLs)
+- ⚠️ **Email Verification**: Optional (requires Pro or self-hosting)
+- ⚠️ **Password Reset**: Requires SMTP configuration (Pro or self-hosting)
+- ⚠️ **Image Transformations**: Not available (using direct file URLs instead)
 
 ### Technical Features
 
@@ -134,19 +150,28 @@ Before you begin, ensure you have the following installed:
    2. Click **"Create API Key"**
    3. Enter a name (e.g., "Backend API Key")
    4. Set expiration (or select "Never" for development)
-   5. Under **Scopes**, select all scopes or at minimum:
-      - `users.read`
-      - `users.write`
-      - `databases.read`
-      - `databases.write`
-      - `collections.read`
-      - `collections.write`
-      - `documents.read`
-      - `documents.write`
-      - `files.read`
-      - `files.write`
+   5. Under **Scopes**, select the following scopes (required for authentication and database operations):
+      - **Sessions**
+        - `sessions.write` (required for creating sessions during registration and login)
+      - **Users**
+        - `users.read`
+        - `users.write`
+      - **Databases**
+        - `databases.read`
+        - `databases.write`
+      - **Collections**
+        - `collections.read`
+        - `collections.write`
+      - **Documents**
+        - `documents.read`
+        - `documents.write`
+      - **Files**
+        - `files.read`
+        - `files.write`
    6. Click **"Create"**
    7. Copy the API Key (⚠️ save it securely, it won't be shown again)
+
+   ⚠️ **Important**: Make sure the `sessions.write` scope is selected, as it's required for user authentication, email verification, and password reset functionality.
 
    ### Step 3: Create Database
 
@@ -228,8 +253,87 @@ Before you begin, ensure you have the following installed:
    ### Step 7: Enable Authentication (Optional but Recommended)
    1. Go to **Auth** in the left sidebar
    2. Under **Auth Methods**, ensure **Email/Password** is enabled
-   3. Configure session settings as needed
-   4. Optionally, add allowed domains under **Security**
+   3. **Important**: Configure email settings for verification emails:
+      - Go to **Settings** → **SMTP** in your Appwrite console
+      - Configure your SMTP settings (or use Appwrite's default for testing)
+      - Verify email delivery is working
+   4. Configure session settings as needed
+   5. Optionally, add allowed domains under **Security**
+
+   ### Step 8: Configure SMTP for Email Delivery (Optional - Pro Feature)
+
+   **Note**: SMTP configuration is a **pro/paid feature** in Appwrite Cloud. Without it:
+   - ✅ Users can still register and login immediately
+   - ❌ Email verification emails will not be sent
+   - ❌ Password reset emails will not be sent
+
+   If you have Appwrite Pro or are self-hosting, configure SMTP for full email functionality:
+   1. In Appwrite Console, go to **Settings** → **SMTP**
+   2. Fill in the following fields:
+
+   **SMTP Configuration Options:**
+
+   <details>
+   <summary><strong>Using Gmail</strong> (Free)</summary>
+   - **Host**: `smtp.gmail.com`
+   - **Port**: `587`
+   - **Security**: TLS
+   - **Username**: Your Gmail address (e.g., `yourname@gmail.com`)
+   - **Password**: **App Password** (NOT your Gmail password)
+     - Go to [Google Account Settings](https://myaccount.google.com/)
+     - Enable 2-Factor Authentication
+     - Go to Security → 2-Step Verification → App passwords
+     - Generate an App Password for "Mail"
+     - Use this 16-character password in Appwrite
+   - **Sender Email**: Your Gmail address
+   - **Sender Name**: `Jira Clone` (or your app name)
+
+   </details>
+
+   <details>
+   <summary><strong>Using SendGrid</strong> (Recommended - 100 emails/day free)</summary>
+   - **Host**: `smtp.sendgrid.net`
+   - **Port**: `587`
+   - **Security**: TLS
+   - **Username**: `apikey` (literally the word "apikey")
+   - **Password**: Your SendGrid API Key
+     - Sign up at [SendGrid](https://sendgrid.com/)
+     - Go to Settings → API Keys → Create API Key
+     - Give it **Full Access** or **Mail Send** access
+     - Copy the API key
+   - **Sender Email**: Verified sender email from SendGrid
+   - **Sender Name**: `Jira Clone`
+
+   </details>
+
+   <details>
+   <summary><strong>Using Mailgun</strong> (5,000 emails/month free)</summary>
+   - **Host**: `smtp.mailgun.org` (or your region-specific host)
+   - **Port**: `587`
+   - **Security**: TLS
+   - **Username**: From Mailgun Dashboard → Sending → Domain Settings → SMTP Credentials
+   - **Password**: From Mailgun Dashboard → Sending → Domain Settings → SMTP Credentials
+   - **Sender Email**: `noreply@your-domain.mailgun.org`
+   - **Sender Name**: `Jira Clone`
+
+   </details>
+
+   <details>
+   <summary><strong>Using AWS SES</strong> (62,000 emails/month free)</summary>
+   - **Host**: `email-smtp.us-east-1.amazonaws.com` (or your region)
+   - **Port**: `587`
+   - **Security**: TLS
+   - **Username**: SMTP Username from AWS SES Console
+   - **Password**: SMTP Password from AWS SES Console
+   - **Sender Email**: Verified email address in AWS SES
+   - **Sender Name**: `Jira Clone`
+
+   </details>
+   3. Click **Update** to save
+   4. **Test the configuration**:
+      - Try registering a new test user in your app
+      - Check the email inbox (and spam folder)
+      - Look for "Verification email sent successfully" in server logs
 
    **✅ You're all set!** All environment variables are now configured.
 
@@ -329,10 +433,19 @@ features/
 
 ### Authentication
 
-- Email/password authentication via Appwrite
-- Session-based auth with HTTP-only cookies
-- Protected routes with automatic redirects
-- User profile management
+- **User Registration & Login**: Email/password authentication via Appwrite
+- **Email Verification**: Required for new user accounts
+  - Verification email sent upon registration
+  - Users must verify email before logging in
+  - Resend verification email if not received
+  - Secure token-based verification
+- **Session Management**: Session-based auth with HTTP-only cookies for security
+- **Password Recovery**: Complete forgot password flow
+  - Users can request a password reset via email
+  - Secure token-based verification
+  - Set new password with confirmation
+- **Protected Routes**: Automatic redirects for authenticated/unauthenticated users
+- **User Profile Management**: View and manage user information
 
 ### Workspaces
 
@@ -450,24 +563,131 @@ This project is open source and available under the [MIT License](LICENSE).
      ```
    - Restart the development server after adding the variable
 
-2. **Appwrite Connection Errors**
+2. **"Missing scopes ([account])" or "Missing scopes" Error During Registration**
+
+   **Error:**
+
+   ```json
+   {
+     "error": "app.xxxxx@service.cloud.appwrite.io (role: applications) missing scopes"
+   }
+   ```
+
+   **Solution:**
+   - This error occurs when your Appwrite API key doesn't have the required scopes
+   - Go to your Appwrite Console → **Settings** → **View API Keys**
+   - Find your API key and click on it to edit
+   - Under **Scopes**, make sure the following are checked/enabled:
+     - **sessions.write** (required for authentication)
+     - **users.write** (required for creating users)
+   - If you can't edit the existing key, create a new one with all required scopes
+   - Update your `.env.local` with the new API key:
+     ```env
+     NEXT_APPWRITE_KEY=your_new_api_key_here
+     ```
+   - Restart your development server
+
+   **Note**: The `sessions.write` scope is required for:
+   - User registration
+   - User login (creating sessions)
+   - Email verification flow
+   - Password reset functionality
+   - Any operation that creates or manages user sessions
+
+3. **Email Verification Not Being Sent**
+
+   **Note**: Email verification is **optional**. Users can register and login without email verification.
+
+   If you want to enable email verification (requires Appwrite Pro or self-hosting):
+
+   **Step 1: Check Server Logs**
+   Look for these messages in your terminal:
+
+   ```
+   Creating user account for: user@example.com
+   User created successfully: [user-id]
+   Creating session...
+   Attempting to send verification email to: user@example.com
+   Failed to send verification email (SMTP may not be configured): [ERROR]
+   Registration completed successfully
+   ```
+
+   **Step 2: Upgrade to Appwrite Pro or Self-Host**
+   - SMTP is a **pro/paid feature** in Appwrite Cloud
+   - Free tier does not support email sending
+   - Options:
+     1. Upgrade to Appwrite Pro
+     2. Self-host Appwrite and configure SMTP
+     3. Use the app without email verification (current default behavior)
+
+   **Step 3: Configure SMTP** (If you have Pro or self-hosting)
+   - Go to **Appwrite Console** → **Settings** → **SMTP**
+   - See "Step 8: Configure SMTP" in the setup section above
+   - Popular options: Gmail (with App Password), SendGrid, Mailgun
+
+   **Step 4: Test SMTP Configuration**
+   - After configuring SMTP, register a new test user
+   - Check email inbox AND spam folder
+   - Look for "Verification email sent successfully" in server logs
+
+   **Step 5: Common SMTP Mistakes** (If you have Pro)
+   - ❌ Using Gmail password instead of App Password
+   - ❌ Wrong port (use 587 for TLS, 465 for SSL)
+   - ❌ Username incorrect (Gmail: full email, SendGrid: "apikey")
+   - ❌ Sender email not verified (some providers require this)
+   - ❌ Firewall blocking SMTP port
+
+4. **Image Transformations Blocked Error**
+
+   If you see: `AppwriteException: Image transformations are blocked on your current plan`
+
+   **This is expected on the free tier** - the app has been updated to work around this:
+   - ✅ The app now uses direct file URLs instead of image transformations
+   - ✅ Workspace images will still upload and display correctly
+   - ✅ No action needed - this is automatically handled
+
+   **Technical Details**:
+   - Free tier: Uses `getFileView` (direct file URLs)
+   - Paid tier: Could use `getFilePreview` (with transformations like resizing)
+   - Both approaches work, but transformations allow better optimization
+
+5. **Image Upload Returns 401 Unauthorized**
+
+   If workspace images show error: `upstream image response failed ... 401`
+
+   **This means your storage bucket doesn't have public read permissions:**
+   1. Go to **Appwrite Console** → Your Project → **Storage**
+   2. Click on your **images** bucket
+   3. Go to **Settings** → **Permissions**
+   4. **Add or verify** these permissions:
+      - **Role: Any** → ✅ **Read** access (this is critical!)
+      - **Role: Users** → ✅ Create, Read, Update, Delete access
+   5. Click **Update**
+   6. Refresh your application
+
+   **Why this is needed:**
+   - Next.js Image component fetches images from the Appwrite URL
+   - Without public read access, the URL returns 401 Unauthorized
+   - "Any" role means anyone can view the images (safe for workspace avatars)
+
+6. **Appwrite Connection Errors**
    - Verify your Appwrite endpoint and project ID
    - Check that your API key has proper permissions
    - Ensure database collections and bucket are created
    - Make sure all environment variables are correctly set in `.env.local`
 
-3. **Build Errors**
+7. **Build Errors**
    - Clear `.next` folder and rebuild: `rm -rf .next && npm run build`
    - Verify all environment variables are set
    - Check for TypeScript errors: `npm run lint`
 
-4. **Authentication Issues**
+8. **Authentication Issues**
    - Check cookie settings in Appwrite
    - Verify session configuration
    - Clear browser cookies and try again
    - Ensure the AUTH_COOKIE constant matches your Appwrite session name
 
-5. **API Route 404 Errors**
+9. **API Route 404 Errors**
    - Verify the API routes are properly exported in `src/app/api/[[...route]]/route.ts`
    - Check that the Hono basePath is set to `/api`
    - Ensure `NEXT_PUBLIC_APP_URL` is correctly configured
