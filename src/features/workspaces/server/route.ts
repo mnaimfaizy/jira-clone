@@ -14,6 +14,43 @@ import { generateInviteCode } from "@/lib/utils";
 import { getMember } from "@/features/members/utils";
 import { z } from "zod";
 import { Workspace } from "../types";
+import { seedDefaultTaskStatuses } from "@/features/tasks/utils";
+
+const toPublicAppwriteError = (error: unknown) => {
+  if (typeof error !== "object" || error === null) return null;
+
+  const maybe = error as {
+    code?: unknown;
+    type?: unknown;
+    message?: unknown;
+  };
+
+  const status = typeof maybe.code === "number" ? maybe.code : 400;
+  const type = typeof maybe.type === "string" ? maybe.type : undefined;
+  const message = typeof maybe.message === "string" ? maybe.message : undefined;
+
+  if (!type && !message) return null;
+
+  if (type === "storage_invalid_file_size") {
+    return {
+      status,
+      message:
+        message ?? "File size not allowed. Please upload a smaller image.",
+    };
+  }
+
+  if (type === "storage_invalid_file_type") {
+    return {
+      status,
+      message: message ?? "File type not allowed.",
+    };
+  }
+
+  return {
+    status,
+    message: message ?? "Request failed.",
+  };
+};
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -43,45 +80,60 @@ const app = new Hono()
     zValidator("form", createWorkspaceSchema),
     sessionMiddleware,
     async (c) => {
-      const databases = c.get("databases");
-      const storage = c.get("storage");
-      const user = c.get("user");
+      try {
+        const databases = c.get("databases");
+        const storage = c.get("storage");
+        const user = c.get("user");
 
-      const { name, image } = c.req.valid("form");
+        const { name, image } = c.req.valid("form");
 
-      let uploadedImageUrl: string | undefined;
+        let uploadedImageUrl: string | undefined;
 
-      if (image instanceof File) {
-        const file = await storage.createFile(
-          IMAGES_BUCKET_ID,
+        if (image instanceof File) {
+          const file = await storage.createFile(
+            IMAGES_BUCKET_ID,
+            ID.unique(),
+            image,
+          );
+
+          // Use getFileView instead of getFilePreview (works on free tier)
+          // This returns a URL to view the file directly
+          uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
+        }
+
+        const workspace = await databases.createDocument<Workspace>(
+          DATABASE_ID,
+          WORKSPACES_ID,
           ID.unique(),
-          image,
+          {
+            name,
+            userId: user.$id,
+            imageUrl: uploadedImageUrl,
+            inviteCode: generateInviteCode(6),
+          },
         );
 
-        // Use getFileView instead of getFilePreview (works on free tier)
-        // This returns a URL to view the file directly
-        uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
-      }
-
-      const workspace = await databases.createDocument(
-        DATABASE_ID,
-        WORKSPACES_ID,
-        ID.unique(),
-        {
-          name,
+        await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
           userId: user.$id,
-          imageUrl: uploadedImageUrl,
-          inviteCode: generateInviteCode(6),
-        },
-      );
+          workspaceId: workspace.$id,
+          role: MembersRole.Admin,
+        });
 
-      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
-        userId: user.$id,
-        workspaceId: workspace.$id,
-        role: MembersRole.Admin,
-      });
+        await seedDefaultTaskStatuses({
+          databases,
+          workspaceId: workspace.$id,
+        });
 
-      return c.json({ data: workspace });
+        return c.json<{ data: Workspace }>({ data: workspace });
+      } catch (error) {
+        const appwriteError = toPublicAppwriteError(error);
+        if (appwriteError) {
+          return c.json({ error: appwriteError.message }, 400);
+        }
+
+        console.error(error);
+        return c.json({ error: "Failed to create workspace" }, 500);
+      }
     },
   )
   .patch(
@@ -89,50 +141,60 @@ const app = new Hono()
     sessionMiddleware,
     zValidator("form", updateWorkspaceSchema),
     async (c) => {
-      const databases = c.get("databases");
-      const storage = c.get("storage");
-      const user = c.get("user");
+      try {
+        const databases = c.get("databases");
+        const storage = c.get("storage");
+        const user = c.get("user");
 
-      const { workspaceId } = c.req.param();
-      const { name, image } = c.req.valid("form");
+        const { workspaceId } = c.req.param();
+        const { name, image } = c.req.valid("form");
 
-      const member = await getMember({
-        databases,
-        workspaceId,
-        userId: user.$id,
-      });
+        const member = await getMember({
+          databases,
+          workspaceId,
+          userId: user.$id,
+        });
 
-      if (!member || member.role !== MembersRole.Admin) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
+        if (!member || member.role !== MembersRole.Admin) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
 
-      let uploadedImageUrl: string | undefined;
+        let uploadedImageUrl: string | undefined;
 
-      if (image instanceof File) {
-        const file = await storage.createFile(
-          IMAGES_BUCKET_ID,
-          ID.unique(),
-          image,
+        if (image instanceof File) {
+          const file = await storage.createFile(
+            IMAGES_BUCKET_ID,
+            ID.unique(),
+            image,
+          );
+
+          // Use getFileView instead of getFilePreview (works on free tier)
+          // This returns a URL to view the file directly
+          uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
+        } else {
+          uploadedImageUrl = image;
+        }
+
+        const workspace = await databases.updateDocument<Workspace>(
+          DATABASE_ID,
+          WORKSPACES_ID,
+          workspaceId,
+          {
+            name,
+            imageUrl: uploadedImageUrl,
+          },
         );
 
-        // Use getFileView instead of getFilePreview (works on free tier)
-        // This returns a URL to view the file directly
-        uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
-      } else {
-        uploadedImageUrl = image;
+        return c.json<{ data: Workspace }>({ data: workspace });
+      } catch (error) {
+        const appwriteError = toPublicAppwriteError(error);
+        if (appwriteError) {
+          return c.json({ error: appwriteError.message }, 400);
+        }
+
+        console.error(error);
+        return c.json({ error: "Failed to update workspace" }, 500);
       }
-
-      const workspace = await databases.updateDocument(
-        DATABASE_ID,
-        WORKSPACES_ID,
-        workspaceId,
-        {
-          name,
-          imageUrl: uploadedImageUrl,
-        },
-      );
-
-      return c.json({ data: workspace });
     },
   )
   .delete("/:workspaceId", sessionMiddleware, async (c) => {
