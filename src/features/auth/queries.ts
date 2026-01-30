@@ -18,7 +18,8 @@ export const getCurrent = async () => {
 
     return await account.get();
   } catch (error) {
-    console.error(error);
+    // Silently return null for auth errors (user not logged in)
+    // This is expected behavior for unauthenticated pages
     return null;
   }
 };
