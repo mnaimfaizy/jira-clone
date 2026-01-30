@@ -228,13 +228,17 @@ const app = new Hono()
     const completedTasks = tasks.documents.filter(
       (task) =>
         task.statusId &&
-        (task as any).status?.name?.toLowerCase().includes("done"),
+        (task as unknown as { status?: { name?: string } }).status?.name
+          ?.toLowerCase()
+          .includes("done"),
     ).length;
 
     const inProgressTasks = tasks.documents.filter(
       (task) =>
         task.statusId &&
-        !(task as any).status?.name?.toLowerCase().includes("done"),
+        !(task as unknown as { status?: { name?: string } }).status?.name
+          ?.toLowerCase()
+          .includes("done"),
     ).length;
 
     return c.json({

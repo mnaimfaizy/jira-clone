@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Users } from "lucide-react";
 
 interface WorkspaceIdPageProps {
-  params: {
+  params: Promise<{
     workspaceId: string;
-  };
+  }>;
 }
 
 const WorkspaceIdPage = async ({ params }: WorkspaceIdPageProps) => {
@@ -17,7 +17,8 @@ const WorkspaceIdPage = async ({ params }: WorkspaceIdPageProps) => {
 
   if (!user) redirect("/sign-in");
 
-  const workspace = await getWorkspace({ workspaceId: params.workspaceId });
+  const { workspaceId } = await params;
+  const workspace = await getWorkspace({ workspaceId });
 
   if (!workspace) {
     redirect("/");
@@ -30,18 +31,18 @@ const WorkspaceIdPage = async ({ params }: WorkspaceIdPageProps) => {
         <div>
           <h1 className="text-2xl font-bold">Welcome back, {user.name}!</h1>
           <p className="text-muted-foreground">
-            Here's what's happening in {workspace.name}
+            Here&apos;s what&apos;s happening in {workspace.name}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link href={`/workspaces/${params.workspaceId}/members`}>
+            <Link href={`/workspaces/${workspaceId}/members`}>
               <Users className="size-4 mr-2" />
               Members
             </Link>
           </Button>
           <Button asChild size="sm">
-            <Link href={`/workspaces/${params.workspaceId}/tasks`}>
+            <Link href={`/workspaces/${workspaceId}/tasks`}>
               <PlusCircle className="size-4 mr-2" />
               View Tasks
             </Link>
@@ -50,12 +51,12 @@ const WorkspaceIdPage = async ({ params }: WorkspaceIdPageProps) => {
       </div>
 
       {/* Analytics Cards */}
-      <WorkspaceAnalytics workspaceId={params.workspaceId} />
+      <WorkspaceAnalytics workspaceId={workspaceId} />
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 mt-4">
         <Link
-          href={`/workspaces/${params.workspaceId}/tasks`}
+          href={`/workspaces/${workspaceId}/tasks`}
           className="p-6 border rounded-lg hover:shadow-md transition-shadow bg-card"
         >
           <div className="flex items-start gap-4">
@@ -65,14 +66,14 @@ const WorkspaceIdPage = async ({ params }: WorkspaceIdPageProps) => {
             <div>
               <h3 className="font-semibold text-lg">Manage Tasks</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Create, organize, and track your team's tasks
+                Create, organize, and track your team&apos;s tasks
               </p>
             </div>
           </div>
         </Link>
 
         <Link
-          href={`/workspaces/${params.workspaceId}/members`}
+          href={`/workspaces/${workspaceId}/members`}
           className="p-6 border rounded-lg hover:shadow-md transition-shadow bg-card"
         >
           <div className="flex items-start gap-4">

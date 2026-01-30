@@ -17,7 +17,7 @@ export const getCurrent = async () => {
     const { account } = await createSessionClient();
 
     return await account.get();
-  } catch (error) {
+  } catch {
     // Silently return null for auth errors (user not logged in)
     // This is expected behavior for unauthenticated pages
     return null;
