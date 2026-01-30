@@ -2,7 +2,25 @@
 
 A modern, full-featured project management and task tracking application built with Next.js 14, inspired by Jira. This application provides workspace management, team collaboration, and comprehensive member management features.
 
-## 🚀 Features
+## � Screenshots
+
+### Workspace Dashboard
+
+![Workspace Dashboard](screenshots/workspace-dasboard.png)
+
+### Task Management
+
+![Create Task](screenshots/create-task.png)
+
+### Team Members
+
+![Members Page](screenshots/members-page.png)
+
+### Authentication
+
+![Login Page](screenshots/login-page.png)
+
+## �🚀 Features
 
 ### Core Features
 
