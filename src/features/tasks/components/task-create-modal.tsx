@@ -129,14 +129,16 @@ export const TaskCreateModal = ({
             <div className="space-y-2">
               <Label>Assignee</Label>
               <Select
-                value={assigneeId ?? ""}
-                onValueChange={(value) => setAssigneeId(value || undefined)}
+                value={assigneeId ?? "unassigned"}
+                onValueChange={(value) =>
+                  setAssigneeId(value === "unassigned" ? undefined : value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Unassigned" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {memberOptions.map((m) => (
                     <SelectItem key={m.$id} value={m.$id}>
                       {m.name ?? "Member"}

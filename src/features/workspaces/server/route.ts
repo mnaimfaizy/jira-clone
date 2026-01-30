@@ -7,6 +7,7 @@ import {
   IMAGES_BUCKET_ID,
   MEMBERS_ID,
   WORKSPACES_ID,
+  TASKS_ID,
 } from "@/config";
 import { ID, Query } from "node-appwrite";
 import { MembersRole } from "@/features/members/types";
@@ -197,6 +198,54 @@ const app = new Hono()
       }
     },
   )
+  .get("/:workspaceId/analytics", sessionMiddleware, async (c) => {
+    const databases = c.get("databases");
+    const user = c.get("user");
+    const { workspaceId } = c.req.param();
+
+    const member = await getMember({
+      databases,
+      workspaceId,
+      userId: user.$id,
+    });
+
+    if (!member) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    // Get all tasks for this workspace
+    const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
+      Query.equal("workspaceId", workspaceId),
+      Query.isNull("archivedAt"),
+    ]);
+
+    // Get all members for this workspace
+    const members = await databases.listDocuments(DATABASE_ID, MEMBERS_ID, [
+      Query.equal("workspaceId", workspaceId),
+    ]);
+
+    // Count tasks by status
+    const completedTasks = tasks.documents.filter(
+      (task) =>
+        task.statusId &&
+        (task as any).status?.name?.toLowerCase().includes("done"),
+    ).length;
+
+    const inProgressTasks = tasks.documents.filter(
+      (task) =>
+        task.statusId &&
+        !(task as any).status?.name?.toLowerCase().includes("done"),
+    ).length;
+
+    return c.json({
+      data: {
+        totalTasks: tasks.total,
+        completedTasks,
+        inProgressTasks,
+        totalMembers: members.total,
+      },
+    });
+  })
   .delete("/:workspaceId", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");

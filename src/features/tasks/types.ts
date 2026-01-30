@@ -7,6 +7,7 @@ export type TaskStatus = Models.Document & {
 };
 
 export type Task = Models.Document & {
+  taskId: string;
   workspaceId: string;
   statusId: string;
   title: string;

@@ -248,11 +248,14 @@ const app = new Hono()
         return c.json({ error: "Invalid status" }, 400);
       }
 
+      const taskId = ID.unique();
+
       const task = await databases.createDocument<Task>(
         DATABASE_ID,
         TASKS_ID,
-        ID.unique(),
+        taskId,
         {
+          taskId, // Required by database schema
           workspaceId,
           statusId,
           title,

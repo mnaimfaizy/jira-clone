@@ -74,7 +74,8 @@ export const TaskDetailsModal = ({
   const isBusy =
     updateTask.isPending || archiveTask.isPending || unarchiveTask.isPending;
 
-  const canSave = !!taskQuery.data && title.trim().length > 0 && statusId.length > 0;
+  const canSave =
+    !!taskQuery.data && title.trim().length > 0 && statusId.length > 0;
 
   const handleSave = async () => {
     if (!taskId || !canSave) return;
@@ -105,7 +106,10 @@ export const TaskDetailsModal = ({
   };
 
   return (
-    <ResponsiveModal open={open} onOpenChange={(next) => !isBusy && onOpenChange(next)}>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={(next) => !isBusy && onOpenChange(next)}
+    >
       <div className="p-6">
         <div className="mb-6">
           <h2 className="text-lg font-semibold">Task</h2>
@@ -164,14 +168,16 @@ export const TaskDetailsModal = ({
               <div className="space-y-2">
                 <Label>Assignee</Label>
                 <Select
-                  value={assigneeId ?? ""}
-                  onValueChange={(value) => setAssigneeId(value || undefined)}
+                  value={assigneeId ?? "unassigned"}
+                  onValueChange={(value) =>
+                    setAssigneeId(value === "unassigned" ? undefined : value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {memberOptions.map((m) => (
                       <SelectItem key={m.$id} value={m.$id}>
                         {m.name ?? "Member"}
@@ -201,7 +207,11 @@ export const TaskDetailsModal = ({
                 >
                   Close
                 </Button>
-                <Button type="button" onClick={handleSave} disabled={!canSave || isBusy}>
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!canSave || isBusy}
+                >
                   Save
                 </Button>
               </div>
